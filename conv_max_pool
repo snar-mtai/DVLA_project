@@ -1,0 +1,83 @@
+import numpy as np
+import cv2
+from google.colab.patches import cv2_imshow
+
+image = cv2.imread('1A5b9.jpg')
+
+
+desired_height = 224
+desired_width = 224
+
+cv2_imshow(image)
+print()
+
+height_ratio = desired_height / image.shape[0]
+width_ratio = desired_width / image.shape[1]
+
+#print (height_ratio, width_ratio)
+
+resize_ratio = min(height_ratio, width_ratio)
+#print (resize_ratio)
+
+new_height = int(image.shape[0] * resize_ratio)
+new_width = int(image.shape[1] * resize_ratio)
+#print (new_height, new_width)
+
+resized_image = cv2.resize(image, (new_width, new_height))
+cv2_imshow(resized_image)
+
+canvas = np.zeros((desired_height, desired_width, 3), dtype=np.uint8)
+
+x_offset = (desired_width - new_width) // 2
+y_offset = (desired_height - new_height) // 2
+
+#print (x_offset, y_offset)
+
+canvas[y_offset:y_offset + new_height, x_offset:x_offset + new_width] = resized_image
+
+ttf_ttf_img = canvas
+
+print()
+cv2_imshow(ttf_ttf_img)
+
+edge_kernel = np.array([
+    [-3, -3, -3, -3, -3, -3, -3],
+    [-2, -2, -2, -2, -2, -2, -2],
+    [-1, -1, -1, -1, -1, -1, -1],
+    [0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1],
+    [2, 2, 2, 2, 2, 2, 2],
+    [3, 3, 3, 3, 3, 3, 3]
+], dtype=np.float32)
+conv_stride =2 
+
+convolved_image = cv2.filter2D(ttf_ttf_img, -1, edge_kernel, anchor=(0, 0), delta=0, borderType=cv2.BORDER_DEFAULT)
+convolved_image = convolved_image[::conv_stride, ::conv_stride]
+
+print()
+cv2_imshow(convolved_image)
+
+pooling_size = (3, 3)
+pool_stride = 2
+
+
+def max_pooling(input_image, pool_size, stride):
+    height, width, channels = input_image.shape
+    pooled_height = (height - pool_size[0]) // stride + 1
+    pooled_width = (width - pool_size[1]) // stride + 1
+    pooled_image = np.zeros((pooled_height, pooled_width, channels), dtype=np.uint8)
+    for h in range(0, pooled_height):
+        for w in range(0, pooled_width):
+            pool_region = input_image[h * stride:h * stride + pool_size[0], w * stride:w * stride + pool_size[1]]
+            for c in range(channels):
+                pooled_image[h, w, c] = np.max(pool_region[:, :, c])
+    return pooled_image
+
+max_pooled_image = max_pooling(convolved_image, pooling_size, pool_stride)
+
+print ()
+cv2_imshow(max_pooled_image)
+
+m, n, k= max_pooled_image.shape
+
+print(m, n)
