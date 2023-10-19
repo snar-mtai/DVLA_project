@@ -63,8 +63,8 @@ pool_stride = 2
 
 def max_pooling(input_image, pool_size, stride):
     height, width, channels = input_image.shape
-    pooled_height = (height - pool_size[0]) // stride + 1
-    pooled_width = (width - pool_size[1]) // stride + 1
+    pooled_height = (height - pool_size[0] + 1) // stride + 1
+    pooled_width = (width - pool_size[1] + 1) // stride + 1
     pooled_image = np.zeros((pooled_height, pooled_width, channels), dtype=np.uint8)
     for h in range(0, pooled_height):
         for w in range(0, pooled_width):
